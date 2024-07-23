@@ -1,0 +1,48 @@
+{
+	"schemaVersion": 1,
+	"id": "safelogin",
+	"version": "${version}",
+	"name": "SafeLogin",
+	"description": "Makes players invulnerable while logging in and until they move.",
+	"authors": [
+		"JordanPlayz158"
+	],
+	"contact": {
+		"homepage": "https://jordanadams.dev",
+		"sources": "https://github.com/JordanPlayz158/SafeLogin"
+	},
+	"license": "AGPLv3",
+	"icon": "assets/safelogin/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "dev.jordanadams.safelogin.SafeLogin",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "dev.jordanadams.safelogin.SafeLoginClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"safelogin.mixins.json",
+		{
+			"config": "safelogin.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.11",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
