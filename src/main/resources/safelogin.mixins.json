@@ -3,7 +3,9 @@
   "package": "dev.jordanadams.safelogin.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "OnPlayerMoveMixin"
+    "OnPlayerMoveMixin",
+    "OnPlayerJoinMixin",
+    "OnPlayerPushedMixin"
   ],
   "injectors": {
     "defaultRequire": 1

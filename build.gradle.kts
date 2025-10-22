@@ -37,7 +37,6 @@ loom {
 	mods {
 		create("safelogin") {
 			sourceSets.main
-			sourceSets["client"]
 		}
 	}
 

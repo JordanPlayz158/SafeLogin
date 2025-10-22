@@ -1,0 +1,6 @@
+{
+  "message.safelogin.disable_protection": "Your protection has been disabled, you are free to move.",
+  "message.safelogin.command_protection": "You must run either '/%1$s' or '/%2$s %1$s' when you are ready to disable login protection and be able to move",
+  "message.safelogin.gui_protection": "Close to disable login protection",
+  "message.safelogin.reload": "SafeLogin successfully reloaded!"
+}

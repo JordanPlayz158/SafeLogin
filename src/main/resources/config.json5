@@ -1,0 +1,14 @@
+{
+  // Don't change this value or face the CONSEQUENCES
+  "version": 1,
+  // The type of action to disable the protection
+  //   MOVE: In this case, the player moves off the block they were logged in on
+  //   COMMAND: The player will need to type in a command into chat
+  //   GUI: The player will need to try to move off the block and then click on or exit the GUI
+  "protectionType": "MOVE",
+  // If true the join message will only be sent after the player is no longer protected
+  "delayJoinMessage": true,
+  // If the protectionType is set to COMMAND then this is the command that will be used to disable the protection
+  //   If you switch the command you WILL need to restart the server for the change to take effect
+  "command": "ready"
+}

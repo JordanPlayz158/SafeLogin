@@ -20,20 +20,10 @@
 				"value": "dev.jordanadams.safelogin.SafeLogin",
 				"adapter": "kotlin"
 			}
-		],
-		"client": [
-			{
-				"value": "dev.jordanadams.safelogin.SafeLoginClient",
-				"adapter": "kotlin"
-			}
 		]
 	},
 	"mixins": [
-		"safelogin.mixins.json",
-		{
-			"config": "safelogin.client.mixins.json",
-			"environment": "client"
-		}
+		"safelogin.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.15.11",
@@ -41,8 +31,5 @@
 		"java": ">=17",
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }
