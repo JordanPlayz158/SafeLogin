@@ -50,16 +50,13 @@ public abstract class OnPlayerPushedMixin extends Entity {
 
     boolean wasTeleported = false;
     if (teleportIfInvulnerable(pushed)) {
-      SafeLogin.INSTANCE.getLogger().info("{} teleported as {} pushed it away", pushed.getDisplayName().getString(), pusher.getDisplayName().getString());
       wasTeleported = true;
     }
 
     if (teleportIfInvulnerable(pusher)) {
-      SafeLogin.INSTANCE.getLogger().info("{} teleported as {} pushed it away", pusher.getDisplayName().getString(), pushed.getDisplayName().getString());
       wasTeleported = true;
     }
 
-    //SafeLogin.INSTANCE.getLogger().debug("Player '{}' collided with Entity '{}'", entity.getName().getString(), getType().getName().getString());
     return wasTeleported;
   }
 

@@ -52,8 +52,6 @@ public class OnPlayerPacketMixin {
       }
     }
 
-    //SafeLogin.INSTANCE.getLogger().debug("{}, {}, {}%n", packetX, packetY, packetZ);
-
     SafeLogin.INSTANCE.invulnerabilityCheck(player, proposedPosition, acceptedPosition);
   }
 
