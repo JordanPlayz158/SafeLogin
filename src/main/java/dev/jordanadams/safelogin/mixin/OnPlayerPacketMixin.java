@@ -1,6 +1,7 @@
 package dev.jordanadams.safelogin.mixin;
 
 import dev.jordanadams.safelogin.SafeLogin;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayNetworkHandler.class)
-public class OnPlayerMoveMixin {
+public class OnPlayerPacketMixin {
 
   @Shadow public ServerPlayerEntity player;
 
@@ -54,5 +55,14 @@ public class OnPlayerMoveMixin {
     //SafeLogin.INSTANCE.getLogger().debug("{}, {}, {}%n", packetX, packetY, packetZ);
 
     SafeLogin.INSTANCE.invulnerabilityCheck(player, proposedPosition, acceptedPosition);
+  }
+
+  @Inject(at = @At("HEAD"), method = "onPlayerInteractEntity", cancellable = true)
+  private void onPlayerAttack(PlayerInteractEntityC2SPacket packet, CallbackInfo ci) {
+    if (!SafeLogin.INSTANCE.isPlayerInvulnerable(player.getUuid())) {
+      return;
+    }
+
+    ci.cancel();
   }
 }

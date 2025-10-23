@@ -26,7 +26,7 @@ class GuiProtectionEvaluator : ProtectionEvaluator {
           return Generic3x3ContainerScreenHandler(syncId, playerInventory, object : SimpleInventory(9) {
             override fun onClose(player: PlayerEntity?) {
               super.onClose(player)
-              SafeLogin.setInvulnerability(player as ServerPlayerEntity, false)
+              SafeLogin.disableInvulnerability(player as ServerPlayerEntity)
             }
           })
         }

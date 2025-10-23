@@ -30,7 +30,7 @@ object SafeLogin : ModInitializer {
   private val configFile = File(configDirectory, "config.json5")
 
 	// Player UUIDs invulnerable due to SafeLogin, to be removed on input packet
-	private val playersInvulnerable = HashMap<UUID, BlockPos>()
+	private val playersInvulnerable = HashMap<UUID, InvulnerablePlayerData>()
   private val playerCachedNames = HashMap<UUID, String>()
 
   private lateinit var config: SafeLoginConfig
@@ -43,13 +43,13 @@ object SafeLogin : ModInitializer {
     registerCommands()
 
 		ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
-			setInvulnerability(handler.player, true)
+			enableInvulnerability(handler.player)
 		}
 
     // Cleanup any players
     ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
       val player = handler.player
-      setInvulnerability(player, false)
+      disableInvulnerability(player)
       evaluator.onPlayerDisconnect(player.uuid)
     }
   }
@@ -75,7 +75,7 @@ object SafeLogin : ModInitializer {
         return@Command 0
       }
 
-      setInvulnerability(context.source.player!!, false)
+      disableInvulnerability(context.source.player!!)
       return@Command 1
     }
 
@@ -92,57 +92,93 @@ object SafeLogin : ModInitializer {
 
 	fun invulnerabilityCheck(player: ServerPlayerEntity, proposedPosition: BlockPos, acceptedPosition: BlockPos) {
     if (evaluator.evaluate(player, proposedPosition, acceptedPosition)) {
-      setInvulnerability(player, false)
+      disableInvulnerability(player)
     }
 	}
 
   fun isPlayerInvulnerable(uuid: UUID) = getInvulnerablePlayerPosition(uuid) !== null
 
   fun getInvulnerablePlayerPosition(uuid: UUID) =
-    playersInvulnerable[uuid]
+    playersInvulnerable[uuid]?.position
 
-  fun setInvulnerability(player: ServerPlayerEntity, invulnerable: Boolean) {
-		player.abilities.invulnerable = invulnerable
-		// Ensure hostile mobs won't track to player and huddle around them
-		//   and not sure how creepers would react to invulnerable player
-		player.isInvisible = invulnerable
-    // Prevents fluids from pushing you
-    player.abilities.flying = invulnerable
-    player.sendAbilitiesUpdate()
+  fun enableInvulnerability(player: ServerPlayerEntity) {
+    val playerAbilities = player.abilities
+
+    playersInvulnerable[player.uuid] = InvulnerablePlayerData(player.blockPos.toImmutable(),
+      playerAbilities.invulnerable,
+      player.isInvisible,
+      playerAbilities.flying)
+
+    modifyAbilities(player,
+      invulnerable = true,
+      // Ensure hostile mobs won't track to player and huddle around them
+      //   and not sure how creepers would react to invulnerable player
+      invisible = true,
+      // Prevents fluids from pushing you
+      flying = true)
 
     val gameProfile = player.gameProfile
     val playerName = gameProfile.name
 
-    if (!player.isDisconnected) {
-      if (invulnerable) {
-        logger.debug("Player '{}' is invulnerable due to login", playerName)
-      } else {
-        logger.debug("Player '{}' is no longer invulnerable due to {}", playerName, evaluator)
+    logger.debug("Player '{}' is invulnerable due to login", playerName)
+	}
 
-        if (config.delayJoinMessage) {
-          val cachedPlayerName = playerCachedNames[player.uuid]
-          val playerDisplayName = player.displayName
+  /**
+   * @return true if invulnerability was enabled when called
+   */
+  fun disableInvulnerability(player: ServerPlayerEntity): Boolean {
+    val playerUuid = player.uuid
+    val playerName = player.gameProfile.name
 
-          val joinText = if (playerName.equals(cachedPlayerName, true)) {
-            Text.translatable("multiplayer.player.joined", playerDisplayName)
-          } else {
-            Text.translatable("multiplayer.player.joined.renamed", playerDisplayName, cachedPlayerName)
-          }
-          player.server.playerManager.broadcast(joinText.formatted(Formatting.YELLOW), false)
+    val previousAbilityData = playersInvulnerable[playerUuid]
+
+    if (previousAbilityData === null) {
+      logger.debug("Player '{}' invulnerability already disabled", playerName)
+      return false
+    }
+
+    val playerIsDisconnected = player.isDisconnected
+    if (!playerIsDisconnected) {
+      logger.debug("Player '{}' is no longer invulnerable due to {}", playerName, evaluator)
+
+      if (config.delayJoinMessage) {
+        val cachedPlayerName = playerCachedNames[playerUuid]
+        val playerDisplayName = player.displayName
+
+        val joinText = if (playerName.equals(cachedPlayerName, true)) {
+          Text.translatable("multiplayer.player.joined", playerDisplayName)
+        } else {
+          Text.translatable("multiplayer.player.joined.renamed", playerDisplayName, cachedPlayerName)
         }
-
-        player.sendMessage(Text.translatable("message.safelogin.disable_protection"), false)
+        player.server.playerManager.broadcast(joinText.formatted(Formatting.YELLOW), false)
       }
+
+      player.sendMessage(Text.translatable("message.safelogin.disable_protection"), false)
     } else {
       logger.debug("Player '{}' is no longer invulnerable due to disconnecting", playerName)
     }
 
-		if (invulnerable) {
-			playersInvulnerable[player.uuid] = player.blockPos
-		} else {
-			playersInvulnerable.remove(player.uuid)
-		}
-	}
+
+    modifyAbilities(player, previousAbilityData.invulnerability,
+      previousAbilityData.invisibility,
+      previousAbilityData.flying, !playerIsDisconnected)
+
+    playersInvulnerable.remove(playerUuid)
+    return true
+  }
+
+  fun modifyAbilities(player: ServerPlayerEntity, invulnerable: Boolean, invisible: Boolean, flying: Boolean, sendPacket: Boolean = true) {
+    player.abilities.invulnerable = invulnerable
+    // Ensure hostile mobs won't track to player and huddle around them
+    //   and not sure how creepers would react to invulnerable player
+    player.isInvisible = invisible
+    // Prevents fluids from pushing you
+    player.abilities.flying = flying
+
+    if (sendPacket) {
+      player.sendAbilitiesUpdate()
+    }
+  }
 
   fun setCachedPlayerName(uuid: UUID, name: String) {
     playerCachedNames[uuid] = name
